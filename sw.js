@@ -1,61 +1,38 @@
-const CACHE_NAME = ‘fifo-roster-v1’;
-const urlsToCache = [
-‘/’,
-‘/index.html’,
-‘/manifest.json’,
-‘/icon-192.png’,
-‘/icon-512.png’
-];
+const CACHE_NAME = ‘fifo-roster-v2’;
 
-// Install event - cache files
+// Install event - skip caching, just activate immediately
 self.addEventListener(‘install’, event => {
-event.waitUntil(
-caches.open(CACHE_NAME)
-.then(cache => cache.addAll(urlsToCache))
-.then(() => self.skipWaiting())
-);
+self.skipWaiting();
 });
 
-// Activate event - clean old caches
+// Activate event - claim clients immediately
 self.addEventListener(‘activate’, event => {
 event.waitUntil(
 caches.keys().then(cacheNames => {
 return Promise.all(
-cacheNames.map(cacheName => {
-if (cacheName !== CACHE_NAME) {
-return caches.delete(cacheName);
-}
-})
+cacheNames.map(cacheName => caches.delete(cacheName))
 );
 }).then(() => self.clients.claim())
 );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first, then cache
 self.addEventListener(‘fetch’, event => {
 event.respondWith(
-caches.match(event.request)
+fetch(event.request)
 .then(response => {
-if (response) {
-return response;
+// Clone and cache successful responses
+if (response && response.status === 200) {
+const responseClone = response.clone();
+caches.open(CACHE_NAME).then(cache => {
+cache.put(event.request, responseClone);
+});
 }
-return fetch(event.request).then(response => {
-// Don’t cache non-successful responses
-if (!response || response.status !== 200 || response.type !== ‘basic’) {
 return response;
-}
-
-```
-      const responseToCache = response.clone();
-      caches.open(CACHE_NAME)
-        .then(cache => {
-          cache.put(event.request, responseToCache);
-        });
-      
-      return response;
-    });
-  })
-```
-
+})
+.catch(() => {
+// If network fails, try cache
+return caches.match(event.request);
+})
 );
 });
