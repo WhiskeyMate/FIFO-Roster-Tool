@@ -12,11 +12,11 @@
 
   <!-- PWA Manifest -->
 
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/FIFO-Roster-Tool/manifest.json">
 
   <!-- iOS Icons -->
 
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="/FIFO-Roster-Tool/icon-192.png">
 
   <style>
     * {
@@ -42,6 +42,7 @@
       min-height: 100vh;
       min-height: -webkit-fill-available;
       padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+      padding-top: calc(env(safe-area-inset-top) + 16px);
       max-width: 500px;
       margin: 0 auto;
       display: flex;
@@ -507,24 +508,32 @@
     
     // Load from localStorage
     function loadState() {
-      const saved = localStorage.getItem('fifoRosterState');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        state = { ...state, ...parsed, currentDate: new Date() };
-        if (state.selectedPattern) {
-          state.selectedPattern = ROSTER_PATTERNS.find(p => p.id === state.selectedPattern.id);
+      try {
+        const saved = localStorage.getItem('fifoRosterState');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          state = { ...state, ...parsed, currentDate: new Date() };
+          if (state.selectedPattern) {
+            state.selectedPattern = ROSTER_PATTERNS.find(p => p.id === state.selectedPattern.id);
+          }
+          if (state.payCycle) {
+            state.payCycle = PAY_CYCLES.find(p => p.id === state.payCycle.id);
+          }
         }
-        if (state.payCycle) {
-          state.payCycle = PAY_CYCLES.find(p => p.id === state.payCycle.id);
-        }
+      } catch (e) {
+        console.log('Could not load state');
       }
     }
     
     // Save to localStorage
     function saveState() {
-      const toSave = { ...state };
-      delete toSave.currentDate;
-      localStorage.setItem('fifoRosterState', JSON.stringify(toSave));
+      try {
+        const toSave = { ...state };
+        delete toSave.currentDate;
+        localStorage.setItem('fifoRosterState', JSON.stringify(toSave));
+      } catch (e) {
+        console.log('Could not save state');
+      }
     }
     
     // Icons as SVG strings
@@ -983,7 +992,9 @@
     
     // Register service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
+      navigator.serviceWorker.register('/FIFO-Roster-Tool/sw.js').catch(function(e) {
+        console.log('SW registration failed');
+      });
     }
   </script>
 
