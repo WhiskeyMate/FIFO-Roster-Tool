@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FIFO Roster">
+  <meta name="theme-color" content="#f8fafc">
+  <title>FIFO Roster</title>
+
+  <!-- PWA Manifest -->
+
+  <link rel="manifest" href="manifest.json">
+
+  <!-- iOS Icons -->
+
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow-x: hidden;
+    }
+    
+    html {
+      height: -webkit-fill-available;
+    }
+    
+    .container {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+      max-width: 500px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    
+    .btn {
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    
+    .btn-primary {
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #fff;
+      flex: 1;
+    }
+    
+    .btn-secondary {
+      padding: 16px 24px;
+      background: #f1f5f9;
+      color: #64748b;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-icon {
+      width: 44px;
+      height: 44px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .input {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      background: #f1f5f9;
+      outline: none;
+    }
+    
+    .select-btn {
+      width: 100%;
+      padding: 16px 18px;
+      border: none;
+      border-radius: 14px;
+      background: #f1f5f9;
+      color: #334155;
+      text-align: left;
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .select-btn.selected {
+      background: #3b82f6;
+      color: #fff;
+    }
+    
+    /* Setup Screen */
+    .setup-container {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    
+    .setup-content {
+      width: 100%;
+      max-width: 420px;
+    }
+    
+    .progress-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+    
+    .progress-dot {
+      height: 8px;
+      border-radius: 4px;
+      background: #cbd5e1;
+      transition: all 0.3s ease;
+    }
+    
+    .progress-dot.active {
+      background: #3b82f6;
+    }
+    
+    .setup-card {
+      padding: 32px;
+    }
+    
+    .setup-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    
+    .setup-subtitle {
+      font-size: 16px;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+    
+    .setup-nav {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    
+    /* Calendar Screen */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 4px 20px;
+    }
+    
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    
+    .month-nav {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .month-nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .month-title {
+      text-align: center;
+    }
+    
+    .month-title h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    
+    .month-title p {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 12px;
+      background: #f1f5f9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .today-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #f1f5f9;
+      color: #3b82f6;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .calendar {
+      padding: 0;
+    }
+    
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      padding: 16px 12px 12px;
+    }
+    
+    .weekday {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      padding: 0 12px 16px;
+    }
+    
+    .day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+    
+    .day span {
+      font-size: 15px;
+      font-weight: 500;
+    }
+    
+    .day.other-month span {
+      color: #cbd5e1;
+    }
+    
+    .day.today {
+      background: #3b82f6 !important;
+    }
+    
+    .day.today span {
+      color: #fff !important;
+      font-weight: 700;
+    }
+    
+    .day.day-shift { background: #fef08a; }
+    .day.night-shift { background: #c7d2fe; }
+    .day.rr { background: #bbf7d0; }
+    
+    .payday-marker {
+      position: absolute;
+      bottom: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #22c55e;
+    }
+    
+    .day.today .payday-marker {
+      color: #fff;
+    }
+    
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #64748b;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+    
+    .current-pattern {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    
+    /* Settings Panel */
+    .settings-panel {
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .settings-grid {
+      display: grid;
+      gap: 16px;
+    }
+    
+    .settings-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .settings-label {
+      display: block;
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .settings-select {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      background: #f1f5f9;
+      cursor: pointer;
+      outline: none;
+    }
+    
+    .reset-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    /* Ad Banner */
+    .ad-banner {
+      padding: 16px;
+      background: #fff;
+      border-top: 1px solid #e2e8f0;
+      margin-top: auto;
+    }
+    
+    .ad-placeholder {
+      max-width: 728px;
+      height: 70px;
+      margin: 0 auto;
+      background: #f1f5f9;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    
+    /* Scrollable options */
+    .options-scroll {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    
+    /* Helper box */
+    .helper-box {
+      margin-top: 24px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 16px;
+    }
+    
+    .helper-box p {
+      font-size: 15px;
+      color: #475569;
+      margin-bottom: 12px;
+    }
+    
+    .helper-box .hint {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-top: 10px;
+    }
+    
+    .success-box {
+      padding: 24px;
+      background: #f0fdf4;
+      border-radius: 16px;
+      text-align: center;
+    }
+    
+    .success-box p {
+      color: #166534;
+      font-weight: 500;
+    }
+    
+    /* Icons */
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .icon-sm {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* Hide when not needed */
+    .hidden { display: none !important; }
+  </style>
+
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // Data
+    const ROSTER_PATTERNS = [
+      { id: '2-1', name: '2 weeks on / 1 week off', onDays: 14, offDays: 7 },
+      { id: '2-2', name: '2 weeks on / 2 weeks off', onDays: 14, offDays: 14 },
+      { id: '8-6', name: '8 days on / 6 days off', onDays: 8, offDays: 6 },
+      { id: '4-3', name: '4 days on / 3 days off', onDays: 4, offDays: 3 },
+      { id: '5-2', name: '5 days on / 2 days off', onDays: 5, offDays: 2 },
+      { id: '9-5', name: '9 days on / 5 days off', onDays: 9, offDays: 5 },
+      { id: '7-7', name: '7 days on / 7 days off', onDays: 7, offDays: 7 },
+    ];
+    
+    const PAY_CYCLES = [
+      { id: 'weekly', name: 'Weekly', days: 7 },
+      { id: 'fortnightly', name: 'Fortnightly', days: 14 },
+      { id: 'monthly', name: 'Monthly', days: 0 },
+    ];
+    
+    // State
+    let state = {
+      setupComplete: false,
+      setupStep: 1,
+      currentDate: new Date(),
+      selectedPattern: null,
+      rosterStartDate: new Date().toISOString().split('T')[0],
+      startOnSite: true,
+      hasDayNightShift: false,
+      dayNightSplit: 7,
+      payCycle: null,
+      firstPayday: new Date().toISOString().split('T')[0],
+      showSettings: false
+    };
+    
+    // Load from localStorage
+    function loadState() {
+      const saved = localStorage.getItem('fifoRosterState');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        state = { ...state, ...parsed, currentDate: new Date() };
+        if (state.selectedPattern) {
+          state.selectedPattern = ROSTER_PATTERNS.find(p => p.id === state.selectedPattern.id);
+        }
+        if (state.payCycle) {
+          state.payCycle = PAY_CYCLES.find(p => p.id === state.payCycle.id);
+        }
+      }
+    }
+    
+    // Save to localStorage
+    function saveState() {
+      const toSave = { ...state };
+      delete toSave.currentDate;
+      localStorage.setItem('fifoRosterState', JSON.stringify(toSave));
+    }
+    
+    // Icons as SVG strings
+    const icons = {
+      chevronLeft: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>',
+      chevronRight: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>',
+      settings: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>',
+      x: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+      check: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>',
+    };
+    
+    // Helpers
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    function getDaysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+    
+    function getFirstDayOfMonth(year, month) {
+      return new Date(year, month, 1).getDay();
+    }
+    
+    function isToday(date) {
+      const today = new Date();
+      return date.toDateString() === today.toDateString();
+    }
+    
+    function getShiftType(date) {
+      if (!state.hasDayNightShift || !state.selectedPattern) return null;
+      
+      const start = new Date(state.rosterStartDate);
+      start.setHours(0, 0, 0, 0);
+      const check = new Date(date);
+      check.setHours(0, 0, 0, 0);
+      
+      const diffTime = check.getTime() - start.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays < 0) return null;
+      
+      const cycleLength = state.selectedPattern.onDays + state.selectedPattern.offDays;
+      const dayInCycle = ((diffDays % cycleLength) + cycleLength) % cycleLength;
+      
+      if (state.startOnSite) {
+        if (dayInCycle < state.selectedPattern.onDays) {
+          return dayInCycle < state.dayNightSplit ? 'day' : 'night';
+        }
+      } else {
+        if (dayInCycle >= state.selectedPattern.offDays) {
+          const workDay = dayInCycle - state.selectedPattern.offDays;
+          return workDay < state.dayNightSplit ? 'day' : 'night';
+        }
+      }
+      return null;
+    }
+    
+    function isOnSite(date) {
+      if (!state.selectedPattern) return null;
+      
+      const start = new Date(state.rosterStartDate);
+      start.setHours(0, 0, 0, 0);
+      const check = new Date(date);
+      check.setHours(0, 0, 0, 0);
+      
+      const diffTime = check.getTime() - start.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays < 0) return null;
+      
+      const cycleLength = state.selectedPattern.onDays + state.selectedPattern.offDays;
+      const dayInCycle = ((diffDays % cycleLength) + cycleLength) % cycleLength;
+      
+      return state.startOnSite ? dayInCycle < state.selectedPattern.onDays : dayInCycle >= state.selectedPattern.offDays;
+    }
+    
+    function isPayday(date) {
+      if (!state.payCycle) return false;
+      
+      const first = new Date(state.firstPayday);
+      first.setHours(0, 0, 0, 0);
+      const check = new Date(date);
+      check.setHours(0, 0, 0, 0);
+      
+      if (state.payCycle.id === 'monthly') {
+        const lastDay = new Date(check.getFullYear(), check.getMonth() + 1, 0).getDate();
+        return check.getDate() === lastDay;
+      }
+      
+      const diffTime = check.getTime() - first.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays >= 0 && diffDays % state.payCycle.days === 0;
+    }
+    
+    function getCalendarDays() {
+      const year = state.currentDate.getFullYear();
+      const month = state.currentDate.getMonth();
+      const daysInMonth = getDaysInMonth(year, month);
+      const firstDay = getFirstDayOfMonth(year, month);
+      const days = [];
+      
+      const prevMonthDays = getDaysInMonth(year, month - 1);
+      for (let i = firstDay - 1; i >= 0; i--) {
+        days.push({ date: new Date(year, month - 1, prevMonthDays - i), isCurrentMonth: false });
+      }
+      
+      for (let i = 1; i <= daysInMonth; i++) {
+        days.push({ date: new Date(year, month, i), isCurrentMonth: true });
+      }
+      
+      const remaining = 42 - days.length;
+      for (let i = 1; i <= remaining; i++) {
+        days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
+      }
+      
+      return days;
+    }
+    
+    function canProceed() {
+      switch (state.setupStep) {
+        case 1: return state.selectedPattern !== null;
+        case 2: return state.rosterStartDate !== '';
+        case 3: return true;
+        case 4: return state.payCycle !== null;
+        case 5: return state.payCycle?.id === 'monthly' || state.firstPayday !== '';
+        default: return true;
+      }
+    }
+    
+    // Render functions
+    function renderSetup() {
+      const totalSteps = 5;
+      
+      let stepContent = '';
+      
+      switch (state.setupStep) {
+        case 1:
+          stepContent = `
+            <h1 class="setup-title">What's your roster?</h1>
+            <p class="setup-subtitle">Select your swing pattern</p>
+            <div class="options-scroll">
+              ${ROSTER_PATTERNS.map(p => `
+                <button class="select-btn ${state.selectedPattern?.id === p.id ? 'selected' : ''}" onclick="selectPattern('${p.id}')">
+                  <span>${p.name}</span>
+                  ${state.selectedPattern?.id === p.id ? icons.check : ''}
+                </button>
+              `).join('')}
+            </div>
+          `;
+          break;
+          
+        case 2:
+          stepContent = `
+            <h1 class="setup-title">When did it start?</h1>
+            <p class="setup-subtitle">First day of your current swing</p>
+            <input type="date" class="input" value="${state.rosterStartDate}" onchange="setRosterStartDate(this.value)">
+            <p style="font-size: 15px; color: #64748b; margin: 24px 0 12px;">On that date, were you...</p>
+            <button class="select-btn ${state.startOnSite ? 'selected' : ''}" onclick="setStartOnSite(true)">
+              <span>Starting on site</span>
+              ${state.startOnSite ? icons.check : ''}
+            </button>
+            <button class="select-btn ${!state.startOnSite ? 'selected' : ''}" onclick="setStartOnSite(false)">
+              <span>Starting R&R</span>
+              ${!state.startOnSite ? icons.check : ''}
+            </button>
+          `;
+          break;
+          
+        case 3:
+          stepContent = `
+            <h1 class="setup-title">Shift rotation?</h1>
+            <p class="setup-subtitle">Do you swap between days and nights?</p>
+            <button class="select-btn ${!state.hasDayNightShift ? 'selected' : ''}" onclick="setDayNightShift(false)">
+              <span>No, same shift all swing</span>
+              ${!state.hasDayNightShift ? icons.check : ''}
+            </button>
+            <button class="select-btn ${state.hasDayNightShift ? 'selected' : ''}" onclick="setDayNightShift(true)">
+              <span>Yes, I rotate day/night</span>
+              ${state.hasDayNightShift ? icons.check : ''}
+            </button>
+            ${state.hasDayNightShift && state.selectedPattern ? `
+              <div class="helper-box">
+                <p>Days on day shift before nights?</p>
+                <input type="number" class="input" min="1" max="${state.selectedPattern.onDays - 1}" value="${state.dayNightSplit}" onchange="setDayNightSplit(this.value)">
+                <p class="hint">${state.dayNightSplit} days → ${state.selectedPattern.onDays - state.dayNightSplit} nights</p>
+              </div>
+            ` : ''}
+          `;
+          break;
+          
+        case 4:
+          stepContent = `
+            <h1 class="setup-title">Pay cycle?</h1>
+            <p class="setup-subtitle">How often do you get paid?</p>
+            ${PAY_CYCLES.map(c => `
+              <button class="select-btn ${state.payCycle?.id === c.id ? 'selected' : ''}" onclick="selectPayCycle('${c.id}')">
+                <span>${c.name}</span>
+                ${state.payCycle?.id === c.id ? icons.check : ''}
+              </button>
+            `).join('')}
+          `;
+          break;
+          
+        case 5:
+          stepContent = `
+            <h1 class="setup-title">Next payday?</h1>
+            <p class="setup-subtitle">${state.payCycle?.id === 'monthly' ? 'Monthly pay is on the last day' : 'Pick any recent or upcoming payday'}</p>
+            ${state.payCycle?.id === 'monthly' ? `
+              <div class="success-box">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" style="margin-bottom: 8px;"><path d="M20 6L9 17l-5-5"/></svg>
+                <p>Last day of each month</p>
+              </div>
+            ` : `
+              <input type="date" class="input" value="${state.firstPayday}" onchange="setFirstPayday(this.value)">
+            `}
+          `;
+          break;
+      }
+      
+      return `
+        <div class="setup-container">
+          <div class="setup-content">
+            <div class="progress-dots">
+              ${Array.from({ length: totalSteps }, (_, i) => `
+                <div class="progress-dot ${i + 1 <= state.setupStep ? 'active' : ''}" style="width: ${i + 1 === state.setupStep ? '24px' : '8px'}"></div>
+              `).join('')}
+            </div>
+            <div class="card setup-card">
+              ${stepContent}
+              <div class="setup-nav">
+                ${state.setupStep > 1 ? '<button class="btn btn-secondary" onclick="prevStep()">Back</button>' : ''}
+                <button class="btn btn-primary" onclick="nextStep()" ${!canProceed() ? 'disabled' : ''}>
+                  ${state.setupStep === totalSteps ? 'Done' : 'Continue'}
+                  ${icons.chevronRight}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    function renderCalendar() {
+      const year = state.currentDate.getFullYear();
+      const month = state.currentDate.getMonth();
+      const days = getCalendarDays();
+      
+      return `
+        <div class="container">
+          <div class="header">
+            <h1>FIFO Roster</h1>
+            <button class="btn btn-icon" onclick="toggleSettings()">
+              ${state.showSettings ? icons.x : icons.settings}
+            </button>
+          </div>
+          
+          ${state.showSettings ? `
+            <div class="card settings-panel">
+              <div class="settings-grid">
+                <div>
+                  <label class="settings-label">Roster Pattern</label>
+                  <select class="settings-select" onchange="selectPattern(this.value)">
+                    ${ROSTER_PATTERNS.map(p => `<option value="${p.id}" ${state.selectedPattern?.id === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <label class="settings-label">Start Date</label>
+                    <input type="date" class="input" style="padding: 12px; font-size: 14px;" value="${state.rosterStartDate}" onchange="setRosterStartDate(this.value)">
+                  </div>
+                  <div>
+                    <label class="settings-label">Pay Cycle</label>
+                    <select class="settings-select" onchange="selectPayCycle(this.value)">
+                      ${PAY_CYCLES.map(p => `<option value="${p.id}" ${state.payCycle?.id === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <button class="reset-btn" onclick="resetSetup()">Run Setup Again</button>
+            </div>
+          ` : ''}
+          
+          <div class="card month-nav">
+            <div class="month-nav-row">
+              <button class="nav-btn" onclick="prevMonth()">${icons.chevronLeft}</button>
+              <div class="month-title">
+                <h2>${monthNames[month]}</h2>
+                <p>${year}</p>
+              </div>
+              <button class="nav-btn" onclick="nextMonth()">${icons.chevronRight}</button>
+            </div>
+            <button class="today-btn" onclick="goToToday()">Today</button>
+          </div>
+          
+          <div class="card calendar">
+            <div class="weekdays">
+              ${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div class="weekday">${d}</div>`).join('')}
+            </div>
+            <div class="days">
+              ${days.map(({ date, isCurrentMonth }) => {
+                const onSite = isOnSite(date);
+                const payDay = isPayday(date);
+                const today = isToday(date);
+                const shiftType = getShiftType(date);
+                
+                let classes = ['day'];
+                if (!isCurrentMonth) classes.push('other-month');
+                if (today) classes.push('today');
+                
+                if (isCurrentMonth && onSite === true) {
+                  if (state.hasDayNightShift && shiftType === 'night') {
+                    classes.push('night-shift');
+                  } else {
+                    classes.push('day-shift');
+                  }
+                } else if (isCurrentMonth && onSite === false) {
+                  classes.push('rr');
+                }
+                
+                return `
+                  <div class="${classes.join(' ')}">
+                    <span>${date.getDate()}</span>
+                    ${payDay && isCurrentMonth ? '<div class="payday-marker">$</div>' : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+          
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background: #fef08a;"></div>
+              ${state.hasDayNightShift ? 'Day Shift' : 'On Site'}
+            </div>
+            ${state.hasDayNightShift ? `
+              <div class="legend-item">
+                <div class="legend-color" style="background: #c7d2fe;"></div>
+                Night Shift
+              </div>
+            ` : ''}
+            <div class="legend-item">
+              <div class="legend-color" style="background: #bbf7d0;"></div>
+              R&R
+            </div>
+            <div class="legend-item">
+              <span style="font-weight: 700; color: #22c55e;">$</span>
+              Payday
+            </div>
+          </div>
+          
+          <p class="current-pattern">${state.selectedPattern?.name} • ${state.payCycle?.name}</p>
+          
+          <div class="ad-banner">
+            <div class="ad-placeholder">Advertisement</div>
+          </div>
+        </div>
+      `;
+    }
+    
+    function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = state.setupComplete ? renderCalendar() : renderSetup();
+    }
+    
+    // Event handlers
+    window.selectPattern = function(id) {
+      state.selectedPattern = ROSTER_PATTERNS.find(p => p.id === id);
+      saveState();
+      render();
+    };
+    
+    window.setRosterStartDate = function(value) {
+      state.rosterStartDate = value;
+      saveState();
+      render();
+    };
+    
+    window.setStartOnSite = function(value) {
+      state.startOnSite = value;
+      saveState();
+      render();
+    };
+    
+    window.setDayNightShift = function(value) {
+      state.hasDayNightShift = value;
+      saveState();
+      render();
+    };
+    
+    window.setDayNightSplit = function(value) {
+      state.dayNightSplit = parseInt(value) || 1;
+      saveState();
+      render();
+    };
+    
+    window.selectPayCycle = function(id) {
+      state.payCycle = PAY_CYCLES.find(p => p.id === id);
+      saveState();
+      render();
+    };
+    
+    window.setFirstPayday = function(value) {
+      state.firstPayday = value;
+      saveState();
+      render();
+    };
+    
+    window.nextStep = function() {
+      if (state.setupStep < 5) {
+        state.setupStep++;
+      } else {
+        state.setupComplete = true;
+      }
+      saveState();
+      render();
+    };
+    
+    window.prevStep = function() {
+      if (state.setupStep > 1) {
+        state.setupStep--;
+        render();
+      }
+    };
+    
+    window.toggleSettings = function() {
+      state.showSettings = !state.showSettings;
+      render();
+    };
+    
+    window.prevMonth = function() {
+      state.currentDate = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth() - 1, 1);
+      render();
+    };
+    
+    window.nextMonth = function() {
+      state.currentDate = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth() + 1, 1);
+      render();
+    };
+    
+    window.goToToday = function() {
+      state.currentDate = new Date();
+      render();
+    };
+    
+    window.resetSetup = function() {
+      state.setupComplete = false;
+      state.setupStep = 1;
+      state.showSettings = false;
+      saveState();
+      render();
+    };
+    
+    // Init
+    loadState();
+    render();
+    
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+
+</body>
+</html>
