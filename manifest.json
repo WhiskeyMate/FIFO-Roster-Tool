@@ -2,7 +2,7 @@
   "name": "FIFO Roster",
   "short_name": "FIFO Roster",
   "description": "Track your FIFO swing roster and paydays",
-  "start_url": "/",
+  "start_url": "https://whiskeymate.github.io/FIFO-Roster-Tool/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#3b82f6",
