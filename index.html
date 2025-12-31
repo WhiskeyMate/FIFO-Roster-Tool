@@ -97,6 +97,9 @@
   <div id="app"></div>
 
   <script>
+    // HARDCODED BASE URL - change this when domain is ready
+    const BASE_URL = 'https://whiskeymate.github.io/FIFO-Roster-Tool/';
+    
     const ROSTER_PATTERNS = [
       { id: '2-1', name: '2 weeks on / 1 week off', onDays: 14, offDays: 7 },
       { id: '2-2', name: '2 weeks on / 2 weeks off', onDays: 14, offDays: 14 },
@@ -146,7 +149,7 @@
     
     function generateShareLink(name) {
       const data = { p: state.selectedPattern.id, s: state.rosterStartDate, o: state.startOnSite, dn: state.hasDayNightShift, ds: state.dayNightSplit, pc: state.payCycle.id, pd: state.firstPayday, n: name };
-      return window.location.origin + window.location.pathname + '?roster=' + btoa(JSON.stringify(data));
+      return BASE_URL + '?roster=' + btoa(JSON.stringify(data));
     }
     
     function loadState() {
@@ -248,43 +251,108 @@
       let stepContent = '';
       switch (state.setupStep) {
         case 1:
-          stepContent = `<h1 class="setup-title">What's your roster?</h1><p class="setup-subtitle">Select your swing pattern</p><div class="options-scroll">${ROSTER_PATTERNS.map(p => `<button class="select-btn ${state.selectedPattern?.id === p.id ? 'selected' : ''}" onclick="selectPattern('${p.id}')"><span>${p.name}</span>${state.selectedPattern?.id === p.id ? icons.check : ''}</button>`).join('')}</div>`;
+          stepContent = '<h1 class="setup-title">What\'s your roster?</h1><p class="setup-subtitle">Select your swing pattern</p><div class="options-scroll">' + ROSTER_PATTERNS.map(function(p) { return '<button class="select-btn ' + (state.selectedPattern && state.selectedPattern.id === p.id ? 'selected' : '') + '" onclick="selectPattern(\'' + p.id + '\')"><span>' + p.name + '</span>' + (state.selectedPattern && state.selectedPattern.id === p.id ? icons.check : '') + '</button>'; }).join('') + '</div>';
           break;
         case 2:
-          stepContent = `<h1 class="setup-title">When did it start?</h1><p class="setup-subtitle">First day of your current swing</p><input type="date" class="input" value="${state.rosterStartDate}" onchange="setRosterStartDate(this.value)"><p style="font-size:15px;color:#64748b;margin:24px 0 12px;">On that date, were you...</p><button class="select-btn ${state.startOnSite ? 'selected' : ''}" onclick="setStartOnSite(true)"><span>Starting on site</span>${state.startOnSite ? icons.check : ''}</button><button class="select-btn ${!state.startOnSite ? 'selected' : ''}" onclick="setStartOnSite(false)"><span>Starting R&R</span>${!state.startOnSite ? icons.check : ''}</button>`;
+          stepContent = '<h1 class="setup-title">When did it start?</h1><p class="setup-subtitle">First day of your current swing</p><input type="date" class="input" value="' + state.rosterStartDate + '" onchange="setRosterStartDate(this.value)"><p style="font-size:15px;color:#64748b;margin:24px 0 12px;">On that date, were you...</p><button class="select-btn ' + (state.startOnSite ? 'selected' : '') + '" onclick="setStartOnSite(true)"><span>Starting on site</span>' + (state.startOnSite ? icons.check : '') + '</button><button class="select-btn ' + (!state.startOnSite ? 'selected' : '') + '" onclick="setStartOnSite(false)"><span>Starting R&R</span>' + (!state.startOnSite ? icons.check : '') + '</button>';
           break;
         case 3:
-          stepContent = `<h1 class="setup-title">Shift rotation?</h1><p class="setup-subtitle">Do you swap between days and nights?</p><button class="select-btn ${!state.hasDayNightShift ? 'selected' : ''}" onclick="setDayNightShift(false)"><span>No, same shift all swing</span>${!state.hasDayNightShift ? icons.check : ''}</button><button class="select-btn ${state.hasDayNightShift ? 'selected' : ''}" onclick="setDayNightShift(true)"><span>Yes, I rotate day/night</span>${state.hasDayNightShift ? icons.check : ''}</button>${state.hasDayNightShift && state.selectedPattern ? `<div class="helper-box"><p>Days on day shift before nights?</p><input type="number" class="input" min="1" max="${state.selectedPattern.onDays - 1}" value="${state.dayNightSplit}" onchange="setDayNightSplit(this.value)"><p class="hint">${state.dayNightSplit} days → ${state.selectedPattern.onDays - state.dayNightSplit} nights</p></div>` : ''}`;
+          stepContent = '<h1 class="setup-title">Shift rotation?</h1><p class="setup-subtitle">Do you swap between days and nights?</p><button class="select-btn ' + (!state.hasDayNightShift ? 'selected' : '') + '" onclick="setDayNightShift(false)"><span>No, same shift all swing</span>' + (!state.hasDayNightShift ? icons.check : '') + '</button><button class="select-btn ' + (state.hasDayNightShift ? 'selected' : '') + '" onclick="setDayNightShift(true)"><span>Yes, I rotate day/night</span>' + (state.hasDayNightShift ? icons.check : '') + '</button>' + (state.hasDayNightShift && state.selectedPattern ? '<div class="helper-box"><p>Days on day shift before nights?</p><input type="number" class="input" min="1" max="' + (state.selectedPattern.onDays - 1) + '" value="' + state.dayNightSplit + '" onchange="setDayNightSplit(this.value)"><p class="hint">' + state.dayNightSplit + ' days → ' + (state.selectedPattern.onDays - state.dayNightSplit) + ' nights</p></div>' : '');
           break;
         case 4:
-          stepContent = `<h1 class="setup-title">Pay cycle?</h1><p class="setup-subtitle">How often do you get paid?</p>${PAY_CYCLES.map(c => `<button class="select-btn ${state.payCycle?.id === c.id ? 'selected' : ''}" onclick="selectPayCycle('${c.id}')"><span>${c.name}</span>${state.payCycle?.id === c.id ? icons.check : ''}</button>`).join('')}`;
+          stepContent = '<h1 class="setup-title">Pay cycle?</h1><p class="setup-subtitle">How often do you get paid?</p>' + PAY_CYCLES.map(function(c) { return '<button class="select-btn ' + (state.payCycle && state.payCycle.id === c.id ? 'selected' : '') + '" onclick="selectPayCycle(\'' + c.id + '\')"><span>' + c.name + '</span>' + (state.payCycle && state.payCycle.id === c.id ? icons.check : '') + '</button>'; }).join('');
           break;
         case 5:
-          stepContent = `<h1 class="setup-title">Next payday?</h1><p class="setup-subtitle">${state.payCycle?.id === 'monthly' ? 'Monthly pay is on the last day' : 'Pick any recent or upcoming payday'}</p>${state.payCycle?.id === 'monthly' ? `<div class="success-box"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" style="margin-bottom:8px;"><path d="M20 6L9 17l-5-5"/></svg><p>Last day of each month</p></div>` : `<input type="date" class="input" value="${state.firstPayday}" onchange="setFirstPayday(this.value)">`}`;
+          stepContent = '<h1 class="setup-title">Next payday?</h1><p class="setup-subtitle">' + (state.payCycle && state.payCycle.id === 'monthly' ? 'Monthly pay is on the last day' : 'Pick any recent or upcoming payday') + '</p>' + (state.payCycle && state.payCycle.id === 'monthly' ? '<div class="success-box"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" style="margin-bottom:8px;"><path d="M20 6L9 17l-5-5"/></svg><p>Last day of each month</p></div>' : '<input type="date" class="input" value="' + state.firstPayday + '" onchange="setFirstPayday(this.value)">');
           break;
       }
-      return `<div class="setup-container"><div class="setup-content"><div class="progress-dots">${Array.from({length:totalSteps},(_,i)=>`<div class="progress-dot ${i+1<=state.setupStep?'active':''}" style="width:${i+1===state.setupStep?'24px':'8px'}"></div>`).join('')}</div><div class="card setup-card">${stepContent}<div class="setup-nav">${state.setupStep > 1 ? '<button class="btn btn-secondary" onclick="prevStep()">Back</button>' : ''}<button class="btn btn-primary" onclick="nextStep()" ${!canProceed()?'disabled':''}>${state.setupStep===totalSteps?'Done':'Continue'}${icons.chevronRight}</button></div></div></div></div>`;
+      var dots = '';
+      for (var i = 0; i < totalSteps; i++) {
+        dots += '<div class="progress-dot ' + (i + 1 <= state.setupStep ? 'active' : '') + '" style="width:' + (i + 1 === state.setupStep ? '24px' : '8px') + '"></div>';
+      }
+      return '<div class="setup-container"><div class="setup-content"><div class="progress-dots">' + dots + '</div><div class="card setup-card">' + stepContent + '<div class="setup-nav">' + (state.setupStep > 1 ? '<button class="btn btn-secondary" onclick="prevStep()">Back</button>' : '') + '<button class="btn btn-primary" onclick="nextStep()" ' + (!canProceed() ? 'disabled' : '') + '>' + (state.setupStep === totalSteps ? 'Done' : 'Continue') + icons.chevronRight + '</button></div></div></div></div>';
     }
     
     function renderShareModal() {
       if (!state.showShareModal) return '';
-      const nameInputId = 'share-name-input';
-      return `<div class="modal-overlay" onclick="closeShareModal()"><div class="modal" onclick="event.stopPropagation()"><h2>Share Your Roster</h2><p>Send this link to your partner, family, or mates so they can see when you're home.</p>${!state.shareLink ? `<input type="text" id="${nameInputId}" class="input" placeholder="Your name (e.g., Dave)" value="${state.shareName}"><div class="modal-buttons"><button class="btn btn-secondary" onclick="closeShareModal()">Cancel</button><button class="btn btn-primary" onclick="createShareLink()">Create Link</button></div>` : `${state.copySuccess ? '<div class="copy-success">✓ Copied to clipboard!</div>' : ''}<div class="share-link-box">${state.shareLink}</div><div class="modal-buttons"><button class="btn btn-secondary" onclick="closeShareModal()">Done</button><button class="btn btn-primary" onclick="copyShareLink()">${state.copySuccess?'Copied!':'Copy Link'}</button></div>`}</div></div>`;
+      var content = '';
+      if (!state.shareLink) {
+        content = '<input type="text" id="share-name-input" class="input" placeholder="Your name (e.g., Dave)" value="' + state.shareName + '"><div class="modal-buttons"><button class="btn btn-secondary" onclick="closeShareModal()">Cancel</button><button class="btn btn-primary" onclick="createShareLink()">Create Link</button></div>';
+      } else {
+        content = (state.copySuccess ? '<div class="copy-success">✓ Copied to clipboard!</div>' : '') + '<div class="share-link-box">' + state.shareLink + '</div><div class="modal-buttons"><button class="btn btn-secondary" onclick="closeShareModal()">Done</button><button class="btn btn-primary" onclick="copyShareLink()">' + (state.copySuccess ? 'Copied!' : 'Copy Link') + '</button></div>';
+      }
+      return '<div class="modal-overlay" onclick="closeShareModal()"><div class="modal" onclick="event.stopPropagation()"><h2>Share Your Roster</h2><p>Send this link to your partner, family, or mates so they can see when you\'re home.</p>' + content + '</div></div>';
     }
     
     function renderCalendar() {
-      const year = state.currentDate.getFullYear(), month = state.currentDate.getMonth(), days = getCalendarDays();
-      return `<div class="container"><div class="header"><h1>FIFO Roster</h1><div class="header-buttons">${!state.isSharedView ? `<button class="btn btn-icon" onclick="openShareModal()">${icons.share}</button><button class="btn btn-icon" onclick="toggleSettings()">${state.showSettings?icons.x:icons.settings}</button>` : ''}</div></div>${state.isSharedView ? `<div class="shared-banner"><p class="name">${state.sharedName}'s Roster</p><p>🟢 Green = Home &nbsp; 🟡 Yellow = On Site</p></div>` : ''}${state.showSettings && !state.isSharedView ? `<div class="card settings-panel"><div class="settings-grid"><div><label class="settings-label">Roster Pattern</label><select class="settings-select" onchange="selectPattern(this.value)">${ROSTER_PATTERNS.map(p=>`<option value="${p.id}" ${state.selectedPattern?.id===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div><div class="settings-row"><div><label class="settings-label">Start Date</label><input type="date" class="input" style="padding:12px;font-size:14px;" value="${state.rosterStartDate}" onchange="setRosterStartDate(this.value)"></div><div><label class="settings-label">Pay Cycle</label><select class="settings-select" onchange="selectPayCycle(this.value)">${PAY_CYCLES.map(p=>`<option value="${p.id}" ${state.payCycle?.id===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div></div></div><button class="reset-btn" onclick="resetSetup()">Run Setup Again</button></div>` : ''}<div class="card month-nav"><div class="month-nav-row"><button class="nav-btn" onclick="prevMonth()">${icons.chevronLeft}</button><div class="month-title"><h2>${monthNames[month]}</h2><p>${year}</p></div><button class="nav-btn" onclick="nextMonth()">${icons.chevronRight}</button></div><button class="today-btn" onclick="goToToday()">Today</button></div><div class="card calendar"><div class="weekdays">${['S','M','T','W','T','F','S'].map(d=>`<div class="weekday">${d}</div>`).join('')}</div><div class="days">${days.map(({date,isCurrentMonth})=>{const onSite=isOnSite(date),payDay=isPayday(date),today=isToday(date),shiftType=getShiftType(date);let classes=['day'];if(!isCurrentMonth)classes.push('other-month');if(today)classes.push('today');if(isCurrentMonth&&onSite===true){if(state.hasDayNightShift&&shiftType==='night')classes.push('night-shift');else classes.push('day-shift');}else if(isCurrentMonth&&onSite===false)classes.push('rr');return `<div class="${classes.join(' ')}"><span>${date.getDate()}</span>${payDay&&isCurrentMonth&&!state.isSharedView?'<div class="payday-marker">$</div>':''}</div>`;}).join('')}</div></div><div class="legend"><div class="legend-item"><div class="legend-color" style="background:#fef08a;"></div>${state.hasDayNightShift?'Day Shift':'On Site'}</div>${state.hasDayNightShift?`<div class="legend-item"><div class="legend-color" style="background:#c7d2fe;"></div>Night Shift</div>`:''}<div class="legend-item"><div class="legend-color" style="background:#bbf7d0;"></div>${state.isSharedView?'Home':'R&R'}</div>${!state.isSharedView?`<div class="legend-item"><span style="font-weight:700;color:#22c55e;">$</span>Payday</div>`:''}</div><p class="current-pattern">${state.selectedPattern?.name} • ${state.payCycle?.name}</p>${state.isSharedView?`<button class="btn btn-primary" style="margin-top:20px;width:100%;" onclick="createOwnRoster()">Create My Own Roster</button>`:''}<div class="ad-banner"><div class="ad-placeholder">Advertisement</div></div></div>${renderShareModal()}`;
+      var year = state.currentDate.getFullYear();
+      var month = state.currentDate.getMonth();
+      var days = getCalendarDays();
+      
+      var weekdaysHtml = ['S','M','T','W','T','F','S'].map(function(d) { return '<div class="weekday">' + d + '</div>'; }).join('');
+      
+      var daysHtml = days.map(function(day) {
+        var date = day.date;
+        var isCurrentMonth = day.isCurrentMonth;
+        var onSite = isOnSite(date);
+        var payDay = isPayday(date);
+        var today = isToday(date);
+        var shiftType = getShiftType(date);
+        var classes = ['day'];
+        if (!isCurrentMonth) classes.push('other-month');
+        if (today) classes.push('today');
+        if (isCurrentMonth && onSite === true) {
+          if (state.hasDayNightShift && shiftType === 'night') classes.push('night-shift');
+          else classes.push('day-shift');
+        } else if (isCurrentMonth && onSite === false) {
+          classes.push('rr');
+        }
+        return '<div class="' + classes.join(' ') + '"><span>' + date.getDate() + '</span>' + (payDay && isCurrentMonth && !state.isSharedView ? '<div class="payday-marker">$</div>' : '') + '</div>';
+      }).join('');
+      
+      var patternOptions = ROSTER_PATTERNS.map(function(p) { return '<option value="' + p.id + '" ' + (state.selectedPattern && state.selectedPattern.id === p.id ? 'selected' : '') + '>' + p.name + '</option>'; }).join('');
+      var payCycleOptions = PAY_CYCLES.map(function(p) { return '<option value="' + p.id + '" ' + (state.payCycle && state.payCycle.id === p.id ? 'selected' : '') + '>' + p.name + '</option>'; }).join('');
+      
+      var headerButtons = '';
+      if (!state.isSharedView) {
+        headerButtons = '<button class="btn btn-icon" onclick="openShareModal()">' + icons.share + '</button><button class="btn btn-icon" onclick="toggleSettings()">' + (state.showSettings ? icons.x : icons.settings) + '</button>';
+      }
+      
+      var sharedBanner = '';
+      if (state.isSharedView) {
+        sharedBanner = '<div class="shared-banner"><p class="name">' + state.sharedName + '\'s Roster</p><p>🟢 Green = Home &nbsp; 🟡 Yellow = On Site</p></div>';
+      }
+      
+      var settingsPanel = '';
+      if (state.showSettings && !state.isSharedView) {
+        settingsPanel = '<div class="card settings-panel"><div class="settings-grid"><div><label class="settings-label">Roster Pattern</label><select class="settings-select" onchange="selectPattern(this.value)">' + patternOptions + '</select></div><div class="settings-row"><div><label class="settings-label">Start Date</label><input type="date" class="input" style="padding:12px;font-size:14px;" value="' + state.rosterStartDate + '" onchange="setRosterStartDate(this.value)"></div><div><label class="settings-label">Pay Cycle</label><select class="settings-select" onchange="selectPayCycle(this.value)">' + payCycleOptions + '</select></div></div></div><button class="reset-btn" onclick="resetSetup()">Run Setup Again</button></div>';
+      }
+      
+      var legendHtml = '<div class="legend-item"><div class="legend-color" style="background:#fef08a;"></div>' + (state.hasDayNightShift ? 'Day Shift' : 'On Site') + '</div>';
+      if (state.hasDayNightShift) {
+        legendHtml += '<div class="legend-item"><div class="legend-color" style="background:#c7d2fe;"></div>Night Shift</div>';
+      }
+      legendHtml += '<div class="legend-item"><div class="legend-color" style="background:#bbf7d0;"></div>' + (state.isSharedView ? 'Home' : 'R&R') + '</div>';
+      if (!state.isSharedView) {
+        legendHtml += '<div class="legend-item"><span style="font-weight:700;color:#22c55e;">$</span>Payday</div>';
+      }
+      
+      var createOwnBtn = '';
+      if (state.isSharedView) {
+        createOwnBtn = '<button class="btn btn-primary" style="margin-top:20px;width:100%;" onclick="createOwnRoster()">Create My Own Roster</button>';
+      }
+      
+      return '<div class="container"><div class="header"><h1>FIFO Roster</h1><div class="header-buttons">' + headerButtons + '</div></div>' + sharedBanner + settingsPanel + '<div class="card month-nav"><div class="month-nav-row"><button class="nav-btn" onclick="prevMonth()">' + icons.chevronLeft + '</button><div class="month-title"><h2>' + monthNames[month] + '</h2><p>' + year + '</p></div><button class="nav-btn" onclick="nextMonth()">' + icons.chevronRight + '</button></div><button class="today-btn" onclick="goToToday()">Today</button></div><div class="card calendar"><div class="weekdays">' + weekdaysHtml + '</div><div class="days">' + daysHtml + '</div></div><div class="legend">' + legendHtml + '</div><p class="current-pattern">' + (state.selectedPattern ? state.selectedPattern.name : '') + ' • ' + (state.payCycle ? state.payCycle.name : '') + '</p>' + createOwnBtn + '<div class="ad-banner"><div class="ad-placeholder">Advertisement</div></div></div>' + renderShareModal();
     }
     
     function render() { document.getElementById('app').innerHTML = state.setupComplete ? renderCalendar() : renderSetup(); }
     
-    window.selectPattern = function(id) { state.selectedPattern = ROSTER_PATTERNS.find(p => p.id === id); saveState(); render(); };
+    window.selectPattern = function(id) { state.selectedPattern = ROSTER_PATTERNS.find(function(p) { return p.id === id; }); saveState(); render(); };
     window.setRosterStartDate = function(v) { state.rosterStartDate = v; saveState(); render(); };
     window.setStartOnSite = function(v) { state.startOnSite = v; saveState(); render(); };
     window.setDayNightShift = function(v) { state.hasDayNightShift = v; saveState(); render(); };
     window.setDayNightSplit = function(v) { state.dayNightSplit = parseInt(v) || 1; saveState(); render(); };
-    window.selectPayCycle = function(id) { state.payCycle = PAY_CYCLES.find(p => p.id === id); saveState(); render(); };
+    window.selectPayCycle = function(id) { state.payCycle = PAY_CYCLES.find(function(p) { return p.id === id; }); saveState(); render(); };
     window.setFirstPayday = function(v) { state.firstPayday = v; saveState(); render(); };
     window.nextStep = function() { if (state.setupStep < 5) state.setupStep++; else state.setupComplete = true; saveState(); render(); };
     window.prevStep = function() { if (state.setupStep > 1) { state.setupStep--; render(); } };
@@ -296,12 +364,9 @@
     window.openShareModal = function() { state.showShareModal = true; state.shareLink = ''; state.shareName = ''; state.copySuccess = false; render(); };
     window.closeShareModal = function() { state.showShareModal = false; state.shareLink = ''; state.shareName = ''; state.copySuccess = false; render(); };
     window.createShareLink = function() { 
-      const input = document.getElementById('share-name-input');
-      const name = input ? input.value.trim() : '';
-      if (!name) {
-        alert('Please enter your name');
-        return;
-      }
+      var input = document.getElementById('share-name-input');
+      var name = input ? input.value.trim() : '';
+      if (!name) { alert('Please enter your name'); return; }
       state.shareName = name;
       state.shareLink = generateShareLink(name); 
       render(); 
@@ -311,7 +376,7 @@
         state.copySuccess = true; render();
         if (navigator.share) navigator.share({ title: state.shareName + "'s FIFO Roster", text: "Check when I'm home from site!", url: state.shareLink }).catch(function(){});
       }).catch(function() {
-        const t = document.createElement('textarea'); t.value = state.shareLink; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+        var t = document.createElement('textarea'); t.value = state.shareLink; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
         state.copySuccess = true; render();
       });
     };
